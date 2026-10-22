@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Javis - Admin Dashboard</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header>
+  <h1>JAVIS ADMIN</h1>
+  <nav>
+    <a href="index.html">View Site</a>
+    <a href="#" onclick="logout()">Logout</a>
+  </nav>
+</header>
+
+<main>
+
+  <div id="access-denied" class="card" style="display:none;">
+    <h2>Access Denied</h2>
+    <p>You must log in to view this page.</p>
+    <a class="btn" href="login.html">Go to Login</a>
+  </div>
+
+  <div id="dashboard-body" style="display:none;">
+
+    <div class="card">
+      <h2>Event Settings</h2>
+
+      <label for="cfg-org">Organisation Name</label>
+      <input id="cfg-org" type="text">
+
+      <label for="cfg-event">Event Name</label>
+      <input id="cfg-event" type="text">
+
+      <label for="cfg-location">Location</label>
+      <input id="cfg-location" type="text">
+
+      <label for="cfg-time">Entry Time</label>
+      <input id="cfg-time" type="text" placeholder="e.g. 7:00 PM">
+
+      <div class="row">
+        <div>
+          <label for="cfg-price-ordinary">Ordinary Price (UGX)</label>
+          <input id="cfg-price-ordinary" type="number" min="0" step="500">
+        </div>
+        <div>
+          <label for="cfg-price-vip">VIP Price (UGX)</label>
+          <input id="cfg-price-vip" type="number" min="0" step="500">
+        </div>
+      </div>
+
+      <div class="row">
+        <div>
+          <label for="cfg-mtn">MTN Number</label>
+          <input id="cfg-mtn" type="text">
+        </div>
+        <div>
+          <label for="cfg-airtel">Airtel Number</label>
+          <input id="cfg-airtel" type="text">
+        </div>
+      </div>
+
+      <p id="save-status" class="muted"></p>
+      <button onclick="saveSettings()">Save Settings</button>
+    </div>
+
+    <div class="card">
+      <h2>Sold Tickets</h2>
+      <p class="muted" id="sold-count">0 tickets sold</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Code</th>
+            <th>Name</th>
+            <th>Phone</th>
+            <th>Type</th>
+            <th>Amount</th>
+            <th>Method</th>
+            <th>Issued</th>
+          </tr>
+        </thead>
+        <tbody id="sold-table-body"></tbody>
+      </table>
+      <p style="margin-top:12px;">
+        <button class="danger" onclick="clearTickets()">Clear All Tickets (demo only)</button>
+      </p>
+    </div>
+
+    <div class="card">
+      <h2>Verify a Ticket Code</h2>
+      <label for="verify-input">Enter ticket code</label>
+      <input id="verify-input" type="text" placeholder="JVS-XXXX-XXXX-###">
+      <p id="verify-result" class="muted"></p>
+      <button onclick="verifyCode()">Verify</button>
+    </div>
+
+  </div>
+
+</main>
+
+<footer>Javis Ticketing Demo</footer>
+
+<script src="js/config.js"></script>
+<script src="js/codegen.js"></script>
+<script src="js/dashboard.js"></script>
+</body>
+</html>
