@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Javis - Checkout</title>
   <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 <body>
 
@@ -54,6 +55,8 @@
       <p>Your ticket has been generated. Keep the code below safe. Present it at the entrance.</p>
 
       <div class="code-display" id="ticket-code">-</div>
+
+      <div id="ticket-qr" style="text-align:center; margin:20px 0;"></div>
 
       <p class="muted" id="ticket-meta"></p>
 
