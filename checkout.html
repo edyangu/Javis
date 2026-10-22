@@ -44,7 +44,7 @@
 
       <p id="checkout-error" class="error"></p>
 
-      <button onclick="processPayment()">Pay Now</button>
+      <button id="pay-now-btn" type="button">Pay Now</button>
     </div>
   </div>
 
@@ -57,7 +57,7 @@
 
       <p class="muted" id="ticket-meta"></p>
 
-      <button onclick="downloadTicket()">Download Ticket (TXT)</button>
+      <button id="download-btn" type="button">Download Ticket (TXT)</button>
       <a class="btn secondary" href="index.html">Back to Home</a>
     </div>
   </div>
@@ -66,8 +66,6 @@
 
 <footer>Javis Ticketing Demo</footer>
 
-<script src="js/config.js"></script>
-<script src="js/codegen.js"></script>
-<script src="js/checkout.js"></script>
+<script type="module" src="js/checkout.js"></script>
 </body>
 </html>
