@@ -1,86 +1,84 @@
-// auth.js
-// Demo auth. Production: replace with Firebase Authentication.
+// auth.js — Firebase Authentication version
+import { auth, db } from "./firebase.js";
+import {
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  updateProfile
+} from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
+import {
+  doc, setDoc, getDoc, serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
-const USERS_KEY = "javis_users";
-const SESSION_KEY = "javis_session";
+const DEFAULT_CONFIG = {
+  orgName: "Javis Events",
+  eventName: "Live Concert Night",
+  location: "Kampala, Uganda",
+  entryTime: "7:00 PM",
+  currency: "UGX",
+  prices: { ordinary: 50000, vip: 150000 },
+  mtnNumber: "0770000000",
+  airtelNumber: "0750000000"
+};
 
-function simpleHash(str) {
-  // FNV-1a style hash, deterministic for demo storage.
-  let h = 2166136261;
-  for (let i = 0; i < str.length; i++) {
-    h ^= str.charCodeAt(i);
-    h = (h * 16777619) >>> 0;
+// Create org doc + default config for a new user
+async function ensureOrg(user, orgName) {
+  const orgRef = doc(db, "orgs", user.uid);
+  const snap = await getDoc(orgRef);
+  if (!snap.exists()) {
+    await setDoc(orgRef, {
+      name: orgName || (user.email.split("@")[0]),
+      ownerUid: user.uid,
+      createdAt: serverTimestamp()
+    });
+    await setDoc(doc(db, "orgs", user.uid, "config", "main"), {
+      ...DEFAULT_CONFIG,
+      orgName: orgName || DEFAULT_CONFIG.orgName
+    });
   }
-  return h.toString(16);
 }
 
-function getUsers() {
+window.handleLogin = async function () {
+  const email = document.getElementById("login-email").value.trim();
+  const pass = document.getElementById("login-password").value;
+  const err = document.getElementById("login-error");
+  err.textContent = "";
+  if (!email || !pass) { err.textContent = "Enter email and password."; return; }
+
   try {
-    const list = JSON.parse(localStorage.getItem(USERS_KEY) || "[]");
-    if (list.length === 0) {
-      // seed default admin
-      list.push({
-        email: "admin@javis.local",
-        passHash: simpleHash("admin123"),
-        orgName: "Javis Events"
-      });
-      localStorage.setItem(USERS_KEY, JSON.stringify(list));
-    }
-    return list;
+    await signInWithEmailAndPassword(auth, email, pass);
+    window.location.href = "dashboard.html";
   } catch (e) {
-    return [];
+    err.textContent = mapAuthError(e.code);
   }
-}
+};
 
-function saveUsers(list) {
-  localStorage.setItem(USERS_KEY, JSON.stringify(list));
-}
-
-function handleLogin() {
-  const email = document.getElementById("login-email").value.trim().toLowerCase();
+window.handleRegister = async function () {
+  const email = document.getElementById("login-email").value.trim();
   const pass = document.getElementById("login-password").value;
   const err = document.getElementById("login-error");
   err.textContent = "";
+  if (!email || !pass) { err.textContent = "Enter email and password."; return; }
+  if (pass.length < 6) { err.textContent = "Password must be at least 6 characters."; return; }
 
-  if (!email || !pass) {
-    err.textContent = "Enter email and password.";
-    return;
+  try {
+    const cred = await createUserWithEmailAndPassword(auth, email, pass);
+    await updateProfile(cred.user, { displayName: email.split("@")[0] });
+    await ensureOrg(cred.user);
+    window.location.href = "dashboard.html";
+  } catch (e) {
+    err.textContent = mapAuthError(e.code);
   }
+};
 
-  const users = getUsers();
-  const user = users.find(u => u.email === email && u.passHash === simpleHash(pass));
-  if (!user) {
-    err.textContent = "Invalid email or password.";
-    return;
+function mapAuthError(code) {
+  switch (code) {
+    case "auth/invalid-email": return "Invalid email address.";
+    case "auth/user-not-found":
+    case "auth/wrong-password":
+    case "auth/invalid-credential": return "Invalid email or password.";
+    case "auth/email-already-in-use": return "That email already has an account.";
+    case "auth/weak-password": return "Password too weak.";
+    case "auth/too-many-requests": return "Too many attempts. Try again later.";
+    default: return "Login failed. Please try again.";
   }
-
-  localStorage.setItem(SESSION_KEY, JSON.stringify({ email: user.email, orgName: user.orgName }));
-  window.location.href = "dashboard.html";
-}
-
-function handleRegister() {
-  const email = document.getElementById("login-email").value.trim().toLowerCase();
-  const pass = document.getElementById("login-password").value;
-  const err = document.getElementById("login-error");
-  err.textContent = "";
-
-  if (!email || !pass) {
-    err.textContent = "Enter email and password to create an account.";
-    return;
-  }
-  if (pass.length < 6) {
-    err.textContent = "Password must be at least 6 characters.";
-    return;
-  }
-
-  const users = getUsers();
-  if (users.find(u => u.email === email)) {
-    err.textContent = "An account with that email already exists.";
-    return;
-  }
-
-  users.push({ email: email, passHash: simpleHash(pass), orgName: email.split("@")[0] });
-  saveUsers(users);
-  err.textContent = "";
-  alert("Account created. You can now log in.");
 }
