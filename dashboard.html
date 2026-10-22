@@ -1,161 +1,113 @@
-// dashboard.js
-import { auth, db } from "./firebase.js";
-import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
-import {
-  doc, getDoc, setDoc,
-  collection, getDocs, query, orderBy, deleteDoc
-} from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
-import { verifyTicketCode } from "./codegen.js";
-import { DEFAULTS } from "./config.js";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Javis - Admin Dashboard</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
 
-let currentUid = null;
+<header>
+  <h1>JAVIS ADMIN</h1>
+  <nav>
+    <a href="index.html">View Site</a>
+    <a href="#" onclick="logout(); return false;">Logout</a>
+  </nav>
+</header>
 
-onAuthStateChanged(auth, async (user) => {
-  if (!user) {
-    document.getElementById("access-denied").style.display = "block";
-    document.getElementById("dashboard-body").style.display = "none";
-    return;
-  }
-  currentUid = user.uid;
-  document.getElementById("access-denied").style.display = "none";
-  document.getElementById("dashboard-body").style.display = "block";
-  document.getElementById("public-link").textContent =
-    window.location.origin + window.location.pathname.replace(/dashboard\.html$/, "index.html") +
-    "?org=" + currentUid;
+<main>
 
-  // If org config missing, create it now (covers users from earlier failed writes)
-  try {
-    const cfgRef = doc(db, "orgs", currentUid, "config", "main");
-    const snap = await getDoc(cfgRef);
-    if (!snap.exists()) {
-      const orgRef = doc(db, "orgs", currentUid);
-      await setDoc(orgRef, {
-        name: user.email.split("@")[0],
-        ownerUid: user.uid,
-        createdAt: new Date()
-      }, { merge: true });
-      await setDoc(cfgRef, { ...DEFAULTS, orgName: user.email.split("@")[0] });
-      console.log("Created missing org config for", currentUid);
-    }
-  } catch (e) {
-    console.error("Could not ensure org exists:", e);
-  }
+  <div id="access-denied" class="card" style="display:none;">
+    <h2>Access Denied</h2>
+    <p>You must log in to view this page.</p>
+    <a class="btn" href="login.html">Go to Login</a>
+  </div>
 
-  await loadConfigIntoForm();
-  await renderTickets();
-});
+  <div id="dashboard-body" style="display:none;">
 
-async function loadConfigIntoForm() {
-  try {
-    const snap = await getDoc(doc(db, "orgs", currentUid, "config", "main"));
-    if (!snap.exists()) return;
-    const c = snap.data();
-    document.getElementById("cfg-org").value        = c.orgName || "";
-    document.getElementById("cfg-event").value      = c.eventName || "";
-    document.getElementById("cfg-location").value   = c.location || "";
-    document.getElementById("cfg-time").value       = c.entryTime || "";
-    document.getElementById("cfg-price-ordinary").value = c.prices?.ordinary ?? 0;
-    document.getElementById("cfg-price-vip").value      = c.prices?.vip ?? 0;
-    document.getElementById("cfg-mtn").value        = c.mtnNumber || "";
-    document.getElementById("cfg-airtel").value     = c.airtelNumber || "";
-  } catch (e) {
-    console.error("loadConfig error:", e);
-    document.getElementById("save-status").textContent = "Could not load config: " + e.message;
-  }
-}
+    <div class="card">
+      <h2>Event Settings</h2>
 
-window.saveSettings = async function () {
-  const newCfg = {
-    orgName:    document.getElementById("cfg-org").value.trim() || "Javis Events",
-    eventName:  document.getElementById("cfg-event").value.trim() || "Concert",
-    location:   document.getElementById("cfg-location").value.trim() || "Kampala",
-    entryTime:  document.getElementById("cfg-time").value.trim() || "7:00 PM",
-    currency:   "UGX",
-    prices: {
-      ordinary: Number(document.getElementById("cfg-price-ordinary").value) || 0,
-      vip:      Number(document.getElementById("cfg-price-vip").value) || 0
-    },
-    mtnNumber:    document.getElementById("cfg-mtn").value.trim(),
-    airtelNumber: document.getElementById("cfg-airtel").value.trim()
-  };
+      <p class="muted">
+        Public event link (share this with buyers):<br>
+        <span id="public-link" style="font-family:monospace; word-break:break-all;"></span>
+      </p>
 
-  try {
-    await setDoc(doc(db, "orgs", currentUid, "config", "main"), newCfg, { merge: true });
-    document.getElementById("save-status").textContent =
-      "Settings saved at " + new Date().toLocaleTimeString();
-  } catch (e) {
-    document.getElementById("save-status").textContent = "Save failed: " + e.message;
-    console.error(e);
-  }
-};
+      <label for="cfg-org">Organisation Name</label>
+      <input id="cfg-org" type="text">
 
-async function renderTickets() {
-  const tbody = document.getElementById("sold-table-body");
-  tbody.innerHTML = "";
-  try {
-    const q = query(
-      collection(db, "orgs", currentUid, "tickets"),
-      orderBy("issuedAt", "desc")
-    );
-    const snap = await getDocs(q);
-    document.getElementById("sold-count").textContent = snap.size + " ticket(s) sold";
-    snap.forEach(d => {
-      const t = d.data();
-      const tr = document.createElement("tr");
-      const issued = t.issuedAt && t.issuedAt.toMillis
-        ? new Date(t.issuedAt.toMillis()).toLocaleString()
-        : "-";
-      [t.code, t.name, t.phone, (t.type || "").toUpperCase(),
-       t.amount, (t.method || "").toUpperCase(), issued]
-        .forEach(val => {
-          const td = document.createElement("td");
-          td.textContent = val ?? "";
-          tr.appendChild(td);
-        });
-      tbody.appendChild(tr);
-    });
-  } catch (e) {
-    console.error("renderTickets error:", e);
-  }
-}
+      <label for="cfg-event">Event Name</label>
+      <input id="cfg-event" type="text">
 
-window.clearTickets = async function () {
-  if (!confirm("Delete ALL sold tickets for this org? This cannot be undone.")) return;
-  try {
-    const snap = await getDocs(collection(db, "orgs", currentUid, "tickets"));
-    await Promise.all(snap.docs.map(d => deleteDoc(d.ref)));
-    await renderTickets();
-  } catch (e) {
-    alert("Clear failed: " + e.message);
-  }
-};
+      <label for="cfg-location">Location</label>
+      <input id="cfg-location" type="text">
 
-window.verifyCode = async function () {
-  const code = document.getElementById("verify-input").value.trim().toUpperCase();
-  const result = document.getElementById("verify-result");
-  result.textContent = "";
+      <label for="cfg-time">Entry Time</label>
+      <input id="cfg-time" type="text" placeholder="e.g. 7:00 PM">
 
-  if (!verifyTicketCode(code)) {
-    result.textContent = "INVALID format or checksum.";
-    return;
-  }
+      <div class="row">
+        <div>
+          <label for="cfg-price-ordinary">Ordinary Price (UGX)</label>
+          <input id="cfg-price-ordinary" type="number" min="0" step="500">
+        </div>
+        <div>
+          <label for="cfg-price-vip">VIP Price (UGX)</label>
+          <input id="cfg-price-vip" type="number" min="0" step="500">
+        </div>
+      </div>
 
-  try {
-    const snap = await getDocs(collection(db, "orgs", currentUid, "tickets"));
-    let found = null;
-    snap.forEach(d => { if (d.data().code === code) found = d.data(); });
-    if (!found) {
-      result.textContent = "Well-formed but not found in this org's tickets.";
-      return;
-    }
-    result.textContent = "VALID - " + found.type.toUpperCase() +
-      " for " + found.name + " (" + found.phone + ")";
-  } catch (e) {
-    result.textContent = "Verify failed: " + e.message;
-  }
-};
+      <div class="row">
+        <div>
+          <label for="cfg-mtn">MTN Number</label>
+          <input id="cfg-mtn" type="text">
+        </div>
+        <div>
+          <label for="cfg-airtel">Airtel Number</label>
+          <input id="cfg-airtel" type="text">
+        </div>
+      </div>
 
-window.logout = async function () {
-  try { await signOut(auth); } catch (e) { /* ignore */ }
-  window.location.href = "login.html";
-};
+      <p id="save-status" class="muted"></p>
+      <button onclick="saveSettings()">Save Settings</button>
+    </div>
+
+    <div class="card">
+      <h2>Sold Tickets</h2>
+      <p class="muted" id="sold-count">0 tickets sold</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Code</th>
+            <th>Name</th>
+            <th>Phone</th>
+            <th>Type</th>
+            <th>Amount</th>
+            <th>Method</th>
+            <th>Issued</th>
+          </tr>
+        </thead>
+        <tbody id="sold-table-body"></tbody>
+      </table>
+      <p style="margin-top:12px;">
+        <button class="danger" onclick="clearTickets()">Clear All Tickets (demo only)</button>
+      </p>
+    </div>
+
+    <div class="card">
+      <h2>Verify a Ticket Code</h2>
+      <label for="verify-input">Enter ticket code</label>
+      <input id="verify-input" type="text" placeholder="JVS-XXXX-XXXX-###">
+      <p id="verify-result" class="muted"></p>
+      <button onclick="verifyCode()">Verify</button>
+    </div>
+
+  </div>
+
+</main>
+
+<footer>Javis Ticketing Demo</footer>
+
+<script type="module" src="js/dashboard.js"></script>
+</body>
+</html>
