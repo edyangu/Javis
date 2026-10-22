@@ -1,119 +1,435 @@
-/* style.css */
+/* ============================================
+   JAVIS - ticketing stylesheet
+   Plain, human, no gradients, no fuss.
+   ============================================ */
+
 * { box-sizing: border-box; }
 
-body {
+html, body {
   margin: 0;
-  font-family: Arial, Helvetica, sans-serif;
-  background: #f4f4f4;
-  color: #222;
-  line-height: 1.5;
+  padding: 0;
 }
 
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 15px;
+  line-height: 1.55;
+  color: #1a1a1a;
+  background: #f5f3ef;
+}
+
+/* ---------- Header ---------- */
+
 header {
-  background: #1f2a37;
+  background: #1a1a1a;
   color: #fff;
-  padding: 16px 24px;
+  padding: 20px 32px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
+  gap: 12px;
+  border-bottom: 3px solid #d4a017;
 }
 
-header h1 { margin: 0; font-size: 20px; letter-spacing: 1px; }
-header nav a {
+header h1 {
+  margin: 0;
+  font-size: 22px;
+  letter-spacing: 3px;
+  font-weight: 700;
   color: #fff;
-  margin-left: 16px;
+}
+
+header nav {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+header nav a {
+  color: #e8e8e8;
   text-decoration: none;
   font-size: 14px;
+  padding: 8px 12px;
+  border-radius: 4px;
+  transition: background 0.15s, color 0.15s;
 }
-header nav a:hover { text-decoration: underline; }
+
+header nav a:hover {
+  background: #2a2a2a;
+  color: #d4a017;
+}
+
+/* ---------- Main ---------- */
 
 main {
-  max-width: 900px;
-  margin: 24px auto;
-  padding: 0 16px;
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 32px 24px 64px;
 }
+
+/* ---------- Cards ---------- */
 
 .card {
   background: #fff;
-  border: 1px solid #d0d0d0;
-  padding: 20px;
-  margin-bottom: 20px;
+  border: 1px solid #e0dcd5;
+  border-radius: 6px;
+  padding: 28px;
+  margin-bottom: 24px;
 }
 
-.card h2 { margin-top: 0; font-size: 18px; border-bottom: 1px solid #ddd; padding-bottom: 8px; }
+.card h2 {
+  margin: 0 0 20px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #1a1a1a;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #ebe6df;
+  letter-spacing: 0.3px;
+}
 
-.event-info p { margin: 4px 0; }
+.card h3 {
+  margin: 0 0 8px;
+  font-size: 15px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #1a1a1a;
+}
 
-.ticket-options { display: flex; gap: 16px; flex-wrap: wrap; }
+/* ---------- Event info block ---------- */
+
+.event-info h2 {
+  font-size: 26px;
+  font-weight: 700;
+  border-bottom: 1px solid #ebe6df;
+  padding-bottom: 16px;
+  margin-bottom: 16px;
+  letter-spacing: -0.3px;
+}
+
+.event-info p {
+  margin: 8px 0;
+  font-size: 14px;
+  color: #555;
+}
+
+.event-info p strong {
+  color: #1a1a1a;
+  font-weight: 600;
+  display: inline-block;
+  min-width: 110px;
+}
+
+/* ---------- Ticket options ---------- */
+
+.ticket-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
 
 .ticket-box {
-  flex: 1 1 240px;
-  border: 2px solid #1f2a37;
-  padding: 16px;
+  border: 1px solid #e0dcd5;
+  border-radius: 6px;
+  padding: 24px;
+  background: #faf8f5;
+  display: flex;
+  flex-direction: column;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.ticket-box:hover {
+  border-color: #d4a017;
   background: #fff;
 }
 
-.ticket-box h3 { margin: 0 0 8px 0; font-size: 16px; text-transform: uppercase; }
-.ticket-box .price { font-size: 22px; font-weight: bold; margin: 8px 0; }
-.ticket-box p.desc { font-size: 13px; color: #555; min-height: 40px; }
+.ticket-box h3 {
+  color: #1a1a1a;
+}
+
+.ticket-box .price {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 12px 0;
+  letter-spacing: -0.5px;
+}
+
+.ticket-box p.desc {
+  font-size: 13px;
+  color: #666;
+  flex-grow: 1;
+  margin: 0 0 20px;
+  min-height: 40px;
+}
+
+.ticket-box button {
+  align-self: flex-start;
+}
+
+/* ---------- Buttons ---------- */
 
 button, .btn {
-  background: #1f2a37;
+  background: #1a1a1a;
   color: #fff;
   border: none;
-  padding: 10px 16px;
+  border-radius: 4px;
+  padding: 11px 20px;
   font-size: 14px;
+  font-weight: 500;
+  font-family: inherit;
   cursor: pointer;
   text-decoration: none;
   display: inline-block;
+  transition: background 0.15s;
+  letter-spacing: 0.2px;
 }
-button:hover, .btn:hover { background: #374151; }
-button.secondary { background: #6b7280; }
-button.danger { background: #991b1b; }
 
-label { display: block; margin: 10px 0 4px; font-size: 13px; font-weight: bold; }
-input, select {
+button:hover, .btn:hover {
+  background: #333;
+}
+
+button:disabled {
+  background: #888;
+  cursor: not-allowed;
+}
+
+button.secondary {
+  background: #fff;
+  color: #1a1a1a;
+  border: 1px solid #1a1a1a;
+}
+
+button.secondary:hover {
+  background: #f0ece6;
+}
+
+button.danger {
+  background: #8b1e1e;
+}
+
+button.danger:hover {
+  background: #a02424;
+}
+
+/* ---------- Forms ---------- */
+
+label {
+  display: block;
+  margin: 16px 0 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+  letter-spacing: 0.2px;
+}
+
+label:first-of-type {
+  margin-top: 0;
+}
+
+input, select, textarea {
   width: 100%;
-  padding: 8px;
-  border: 1px solid #bbb;
+  padding: 10px 12px;
+  border: 1px solid #d0ccc4;
+  border-radius: 4px;
   font-size: 14px;
+  font-family: inherit;
+  background: #fff;
+  color: #1a1a1a;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: #1a1a1a;
+  box-shadow: 0 0 0 3px rgba(26, 26, 26, 0.08);
+}
+
+/* ---------- Rows ---------- */
+
+.row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+/* ---------- Text utility ---------- */
+
+.muted {
+  color: #666;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.error {
+  color: #8b1e1e;
+  font-size: 13px;
+  margin: 12px 0;
+  padding: 10px 12px;
+  background: #fdf2f2;
+  border-left: 3px solid #8b1e1e;
+  border-radius: 3px;
+  min-height: 0;
+}
+
+.error:empty {
+  display: none;
+}
+
+/* ---------- Ticket code display ---------- */
+
+.code-display {
+  font-family: "SF Mono", "Consolas", "Courier New", monospace;
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: 3px;
+  background: #1a1a1a;
+  color: #d4a017;
+  border-radius: 6px;
+  padding: 24px;
+  text-align: center;
+  word-break: break-all;
+  margin: 20px 0;
+}
+
+/* ---------- Success card ---------- */
+
+.card.success {
+  border-left: 4px solid #2f7d32;
+  background: #f6fbf6;
+}
+
+.card.success h2 {
+  color: #2f7d32;
+  border-bottom-color: #c8e6c9;
+}
+
+/* ---------- Tables ---------- */
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  margin-top: 12px;
+}
+
+th, td {
+  border-bottom: 1px solid #ebe6df;
+  padding: 12px 10px;
+  text-align: left;
+  vertical-align: top;
+}
+
+th {
+  background: #f5f3ef;
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #555;
+  border-bottom: 2px solid #e0dcd5;
+}
+
+td {
   font-family: inherit;
 }
 
-.row { display: flex; gap: 12px; flex-wrap: wrap; }
-.row > div { flex: 1 1 200px; }
-
-.muted { color: #666; font-size: 13px; }
-.code-display {
-  font-family: "Courier New", monospace;
-  font-size: 22px;
-  letter-spacing: 2px;
-  background: #eef2f7;
-  border: 2px dashed #1f2a37;
-  padding: 16px;
-  text-align: center;
-  word-break: break-all;
+tbody tr:hover {
+  background: #faf8f5;
 }
 
-table { width: 100%; border-collapse: collapse; font-size: 14px; }
-th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-th { background: #eaeaea; }
+/* ---------- Notices ---------- */
+
+.notice {
+  background: #fff8e1;
+  border-left: 3px solid #d4a017;
+  padding: 14px 16px;
+  font-size: 13px;
+  margin-bottom: 20px;
+  color: #5c4a00;
+  border-radius: 3px;
+}
+
+/* ---------- Public link display ---------- */
+
+#public-link {
+  font-family: "SF Mono", "Consolas", "Courier New", monospace;
+  font-size: 13px;
+  color: #1a1a1a;
+  background: #f5f3ef;
+  padding: 8px 12px;
+  border-radius: 4px;
+  display: inline-block;
+  margin-top: 6px;
+  border: 1px solid #e0dcd5;
+}
+
+/* ---------- Footer ---------- */
 
 footer {
   text-align: center;
-  padding: 16px;
+  padding: 32px 16px;
   font-size: 12px;
-  color: #666;
+  color: #888;
+  letter-spacing: 0.3px;
+  border-top: 1px solid #e0dcd5;
+  background: #faf8f5;
+  margin-top: 40px;
 }
 
-.notice {
-  background: #fef3c7;
-  border: 1px solid #d97706;
-  padding: 12px;
-  font-size: 13px;
-  margin-bottom: 16px;
-}
+/* ---------- Responsive ---------- */
 
-.success { border-color: #15803d; background: #f0fdf4; }
-.error { color: #991b1b; font-size: 13px; }
+@media (max-width: 640px) {
+  header {
+    padding: 16px 20px;
+  }
+
+  header h1 {
+    font-size: 18px;
+    letter-spacing: 2px;
+  }
+
+  header nav {
+    width: 100%;
+  }
+
+  header nav a {
+    padding: 6px 10px;
+    font-size: 13px;
+  }
+
+  main {
+    padding: 20px 16px 48px;
+  }
+
+  .card {
+    padding: 20px;
+  }
+
+  .event-info h2 {
+    font-size: 22px;
+  }
+
+  .ticket-options {
+    grid-template-columns: 1fr;
+  }
+
+  .row {
+    grid-template-columns: 1fr;
+  }
+
+  .code-display {
+    font-size: 18px;
+    letter-spacing: 2px;
+    padding: 20px;
+  }
+
+  table {
+    font-size: 12px;
+  }
+
+  th, td {
+    padding: 8px 6px;
+  }
+}
