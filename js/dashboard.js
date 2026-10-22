@@ -1,5 +1,3 @@
-
-// dashboard.js
 import { auth, db } from "./firebase.js";
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
 import {
@@ -24,22 +22,19 @@ onAuthStateChanged(auth, async (user) => {
     window.location.origin + window.location.pathname.replace(/dashboard\.html$/, "index.html") +
     "?org=" + currentUid;
 
-  // If org config missing, create it now (covers users from earlier failed writes)
   try {
     const cfgRef = doc(db, "orgs", currentUid, "config", "main");
     const snap = await getDoc(cfgRef);
     if (!snap.exists()) {
-      const orgRef = doc(db, "orgs", currentUid);
-      await setDoc(orgRef, {
+      await setDoc(doc(db, "orgs", currentUid), {
         name: user.email.split("@")[0],
         ownerUid: user.uid,
         createdAt: new Date()
       }, { merge: true });
       await setDoc(cfgRef, { ...DEFAULTS, orgName: user.email.split("@")[0] });
-      console.log("Created missing org config for", currentUid);
     }
   } catch (e) {
-    console.error("Could not ensure org exists:", e);
+    console.error("ensureOrg on dashboard failed:", e);
   }
 
   await loadConfigIntoForm();
@@ -61,7 +56,6 @@ async function loadConfigIntoForm() {
     document.getElementById("cfg-airtel").value     = c.airtelNumber || "";
   } catch (e) {
     console.error("loadConfig error:", e);
-    document.getElementById("save-status").textContent = "Could not load config: " + e.message;
   }
 }
 
@@ -86,7 +80,6 @@ window.saveSettings = async function () {
       "Settings saved at " + new Date().toLocaleTimeString();
   } catch (e) {
     document.getElementById("save-status").textContent = "Save failed: " + e.message;
-    console.error(e);
   }
 };
 
@@ -94,18 +87,14 @@ async function renderTickets() {
   const tbody = document.getElementById("sold-table-body");
   tbody.innerHTML = "";
   try {
-    const q = query(
-      collection(db, "orgs", currentUid, "tickets"),
-      orderBy("issuedAt", "desc")
-    );
+    const q = query(collection(db, "orgs", currentUid, "tickets"), orderBy("issuedAt", "desc"));
     const snap = await getDocs(q);
     document.getElementById("sold-count").textContent = snap.size + " ticket(s) sold";
     snap.forEach(d => {
       const t = d.data();
       const tr = document.createElement("tr");
       const issued = t.issuedAt && t.issuedAt.toMillis
-        ? new Date(t.issuedAt.toMillis()).toLocaleString()
-        : "-";
+        ? new Date(t.issuedAt.toMillis()).toLocaleString() : "-";
       [t.code, t.name, t.phone, (t.type || "").toUpperCase(),
        t.amount, (t.method || "").toUpperCase(), issued]
         .forEach(val => {
@@ -121,42 +110,29 @@ async function renderTickets() {
 }
 
 window.clearTickets = async function () {
-  if (!confirm("Delete ALL sold tickets for this org? This cannot be undone.")) return;
+  if (!confirm("Delete ALL sold tickets for this org?")) return;
   try {
     const snap = await getDocs(collection(db, "orgs", currentUid, "tickets"));
     await Promise.all(snap.docs.map(d => deleteDoc(d.ref)));
     await renderTickets();
-  } catch (e) {
-    alert("Clear failed: " + e.message);
-  }
+  } catch (e) { alert("Clear failed: " + e.message); }
 };
 
 window.verifyCode = async function () {
   const code = document.getElementById("verify-input").value.trim().toUpperCase();
   const result = document.getElementById("verify-result");
   result.textContent = "";
-
-  if (!verifyTicketCode(code)) {
-    result.textContent = "INVALID format or checksum.";
-    return;
-  }
-
+  if (!verifyTicketCode(code)) { result.textContent = "INVALID format or checksum."; return; }
   try {
     const snap = await getDocs(collection(db, "orgs", currentUid, "tickets"));
     let found = null;
     snap.forEach(d => { if (d.data().code === code) found = d.data(); });
-    if (!found) {
-      result.textContent = "Well-formed but not found in this org's tickets.";
-      return;
-    }
-    result.textContent = "VALID - " + found.type.toUpperCase() +
-      " for " + found.name + " (" + found.phone + ")";
-  } catch (e) {
-    result.textContent = "Verify failed: " + e.message;
-  }
+    if (!found) { result.textContent = "Well-formed but not found."; return; }
+    result.textContent = "VALID - " + found.type.toUpperCase() + " for " + found.name + " (" + found.phone + ")";
+  } catch (e) { result.textContent = "Verify failed: " + e.message; }
 };
 
 window.logout = async function () {
-  try { await signOut(auth); } catch (e) { /* ignore */ }
+  try { await signOut(auth); } catch (e) {}
   window.location.href = "login.html";
 };
