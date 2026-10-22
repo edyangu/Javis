@@ -7,7 +7,7 @@ import {
 import { verifyTicketCode } from "./codegen.js";
 import { DEFAULTS } from "./config.js";
 
-let currentUid = null;
+const EVENT_REF = () => doc(db, "settings", "event");
 
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
@@ -15,43 +15,23 @@ onAuthStateChanged(auth, async (user) => {
     document.getElementById("dashboard-body").style.display = "none";
     return;
   }
-  currentUid = user.uid;
   document.getElementById("access-denied").style.display = "none";
   document.getElementById("dashboard-body").style.display = "block";
-  document.getElementById("public-link").textContent =
-    window.location.origin + window.location.pathname.replace(/dashboard\.html$/, "index.html") +
-    "?org=" + currentUid;
-
-  try {
-    const cfgRef = doc(db, "orgs", currentUid, "config", "main");
-    const snap = await getDoc(cfgRef);
-    if (!snap.exists()) {
-      await setDoc(doc(db, "orgs", currentUid), {
-        name: user.email.split("@")[0],
-        ownerUid: user.uid,
-        createdAt: new Date()
-      }, { merge: true });
-      await setDoc(cfgRef, { ...DEFAULTS, orgName: user.email.split("@")[0] });
-    }
-  } catch (e) {
-    console.error("ensureOrg on dashboard failed:", e);
-  }
-
+  document.getElementById("public-link").textContent = window.location.origin + "/index.html";
   await loadConfigIntoForm();
   await renderTickets();
 });
 
 async function loadConfigIntoForm() {
   try {
-    const snap = await getDoc(doc(db, "orgs", currentUid, "config", "main"));
-    if (!snap.exists()) return;
-    const c = snap.data();
+    const snap = await getDoc(EVENT_REF());
+    const c = snap.exists() ? snap.data() : DEFAULTS;
     document.getElementById("cfg-org").value        = c.orgName || "";
     document.getElementById("cfg-event").value      = c.eventName || "";
     document.getElementById("cfg-location").value   = c.location || "";
     document.getElementById("cfg-time").value       = c.entryTime || "";
-    document.getElementById("cfg-price-ordinary").value = c.prices?.ordinary ?? 0;
-    document.getElementById("cfg-price-vip").value      = c.prices?.vip ?? 0;
+    document.getElementById("cfg-price-ordinary").value = c.prices?.ordinary ?? 50000;
+    document.getElementById("cfg-price-vip").value      = c.prices?.vip ?? 150000;
     document.getElementById("cfg-mtn").value        = c.mtnNumber || "";
     document.getElementById("cfg-airtel").value     = c.airtelNumber || "";
   } catch (e) {
@@ -75,11 +55,12 @@ window.saveSettings = async function () {
   };
 
   try {
-    await setDoc(doc(db, "orgs", currentUid, "config", "main"), newCfg, { merge: true });
+    await setDoc(EVENT_REF(), newCfg, { merge: true });
     document.getElementById("save-status").textContent =
       "Settings saved at " + new Date().toLocaleTimeString();
   } catch (e) {
     document.getElementById("save-status").textContent = "Save failed: " + e.message;
+    console.error(e);
   }
 };
 
@@ -87,7 +68,7 @@ async function renderTickets() {
   const tbody = document.getElementById("sold-table-body");
   tbody.innerHTML = "";
   try {
-    const q = query(collection(db, "orgs", currentUid, "tickets"), orderBy("issuedAt", "desc"));
+    const q = query(collection(db, "tickets"), orderBy("issuedAt", "desc"));
     const snap = await getDocs(q);
     document.getElementById("sold-count").textContent = snap.size + " ticket(s) sold";
     snap.forEach(d => {
@@ -110,9 +91,9 @@ async function renderTickets() {
 }
 
 window.clearTickets = async function () {
-  if (!confirm("Delete ALL sold tickets for this org?")) return;
+  if (!confirm("Delete ALL tickets?")) return;
   try {
-    const snap = await getDocs(collection(db, "orgs", currentUid, "tickets"));
+    const snap = await getDocs(collection(db, "tickets"));
     await Promise.all(snap.docs.map(d => deleteDoc(d.ref)));
     await renderTickets();
   } catch (e) { alert("Clear failed: " + e.message); }
@@ -124,7 +105,7 @@ window.verifyCode = async function () {
   result.textContent = "";
   if (!verifyTicketCode(code)) { result.textContent = "INVALID format or checksum."; return; }
   try {
-    const snap = await getDocs(collection(db, "orgs", currentUid, "tickets"));
+    const snap = await getDocs(collection(db, "tickets"));
     let found = null;
     snap.forEach(d => { if (d.data().code === code) found = d.data(); });
     if (!found) { result.textContent = "Well-formed but not found."; return; }
