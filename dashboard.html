@@ -9,7 +9,7 @@
 <body>
 
 <header>
-  <h1>JAVIS ADMIN</h1>
+  <h1>JAVIS ADMIN <span id="super-admin-badge" style="display:none; font-size:12px; padding:2px 8px; background:#d4a017; color:#1a1a1a; border-radius:3px; margin-left:8px; letter-spacing:1px;">SUPER</span></h1>
   <nav>
     <a href="index.html">View Site</a>
     <a href="#" onclick="logout(); return false;">Logout</a>
@@ -30,7 +30,7 @@
       <h2>Event Settings</h2>
 
       <p class="muted">
-        Public event link (share this with buyers):<br>
+        Public event link:<br>
         <span id="public-link" style="font-family:monospace; word-break:break-all;"></span>
       </p>
 
@@ -78,13 +78,8 @@
       <table>
         <thead>
           <tr>
-            <th>Code</th>
-            <th>Name</th>
-            <th>Phone</th>
-            <th>Type</th>
-            <th>Amount</th>
-            <th>Method</th>
-            <th>Issued</th>
+            <th>Code</th><th>Name</th><th>Phone</th><th>Type</th>
+            <th>Amount</th><th>Method</th><th>Issued</th>
           </tr>
         </thead>
         <tbody id="sold-table-body"></tbody>
@@ -100,6 +95,32 @@
       <input id="verify-input" type="text" placeholder="JVS-XXXX-XXXX-###">
       <p id="verify-result" class="muted"></p>
       <button onclick="verifyCode()">Verify</button>
+    </div>
+
+    <div id="super-admin-panel" style="display:none;">
+
+      <div class="card" style="border-left:4px solid #d4a017;">
+        <h2>Super Admin — All Organisers</h2>
+        <p class="muted" id="organisers-count">0 organiser(s)</p>
+        <table>
+          <thead>
+            <tr><th>UID</th><th>Email</th><th>Name</th><th>Joined</th></tr>
+          </thead>
+          <tbody id="organisers-table-body"></tbody>
+        </table>
+      </div>
+
+      <div class="card" style="border-left:4px solid #d4a017;">
+        <h2>Super Admin — All Tickets (Platform-Wide)</h2>
+        <p class="muted" id="all-tickets-count">0 tickets total</p>
+        <table>
+          <thead>
+            <tr><th>Code</th><th>Name</th><th>Type</th><th>Amount</th><th>Issued</th></tr>
+          </thead>
+          <tbody id="all-tickets-table-body"></tbody>
+        </table>
+      </div>
+
     </div>
 
   </div>
