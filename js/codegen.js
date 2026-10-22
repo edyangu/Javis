@@ -1,4 +1,3 @@
-// codegen.js
 const ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
 function randomBlock(length) {
