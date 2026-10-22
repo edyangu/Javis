@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Javis - Concert Tickets</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header>
+  <h1>JAVIS</h1>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="privacy.html">Privacy &amp; Terms</a>
+    <a href="login.html">Organiser Login</a>
+  </nav>
+</header>
+
+<main>
+
+  <div class="card event-info">
+    <h2 id="event-name">Loading...</h2>
+    <p><strong>Location:</strong> <span id="event-location">-</span></p>
+    <p><strong>Entry Time:</strong> <span id="event-time">-</span></p>
+    <p><strong>Organised by:</strong> <span id="event-org">-</span></p>
+  </div>
+
+  <div class="card">
+    <h2>Choose Your Ticket</h2>
+    <div class="ticket-options">
+
+      <div class="ticket-box">
+        <h3>Ordinary</h3>
+        <div class="price" id="price-ordinary">UGX 0</div>
+        <p class="desc">Standard entry to the concert. Access to general standing area.</p>
+        <button onclick="selectTicket('ordinary')">Select Ordinary</button>
+      </div>
+
+      <div class="ticket-box">
+        <h3>VIP</h3>
+        <div class="price" id="price-vip">UGX 0</div>
+        <p class="desc">Priority entry, front stage access, and reserved seating.</p>
+        <button onclick="selectTicket('vip')">Select VIP</button>
+      </div>
+
+    </div>
+  </div>
+
+  <p class="muted">
+    By purchasing a ticket you agree to our
+    <a href="privacy.html">Privacy Policy and Terms of Service</a>.
+  </p>
+
+</main>
+
+<footer>
+  Javis Ticketing Demo &mdash; all prices in UGX
+</footer>
+
+<script src="js/config.js"></script>
+<script src="js/tickets.js"></script>
+</body>
+</html>
