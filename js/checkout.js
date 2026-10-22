@@ -13,6 +13,7 @@ let amount = 0;
 let currentTicket = null;
 
 function fmt(n) { return Number(n).toLocaleString("en-UG"); }
+
 function showErr(msg) {
   const el = document.getElementById("checkout-error");
   if (el) el.textContent = msg;
@@ -41,6 +42,7 @@ async function loadConfig() {
     console.error("loadConfig failed:", e);
     showErr("Could not load event. " + (e.message || ""));
   }
+
   cfg = loaded;
   amount = type === "vip" ? cfg.prices.vip : cfg.prices.ordinary;
 
@@ -48,6 +50,7 @@ async function loadConfig() {
   setText("sum-event",  cfg.eventName);
   setText("sum-type",   type === "vip" ? "VIP" : "Ordinary");
   setText("sum-amount", cfg.currency + " " + fmt(amount));
+
   updateInstruction();
 }
 
@@ -59,9 +62,12 @@ async function handlePay() {
 
   showErr("");
 
-  if (!cfg)       { showErr("Event not loaded. Refresh the page."); return; }
+  if (!cfg) { showErr("Event not loaded. Refresh the page."); return; }
   if (name.length < 3) { showErr("Enter your full name."); return; }
-  if (!/^0[0-9]{9}$/.test(phone)) { showErr("Phone must be exactly 10 digits starting with 0."); return; }
+  if (!/^0[0-9]{9}$/.test(phone)) {
+    showErr("Phone must be exactly 10 digits starting with 0.");
+    return;
+  }
 
   if (btn) { btn.disabled = true; btn.textContent = "Generating code..."; }
 
@@ -81,31 +87,58 @@ async function handlePay() {
     });
   } catch (e) {
     console.error("Save failed:", e);
-    showErr("Ticket saved locally, but Firestore save failed: " + e.message);
+    showErr("Ticket generated, but Firestore save failed: " + e.message);
   }
 
-  // Always show the code, even if Firestore save failed
+  // Switch to success view and display ticket details
   const cv = document.getElementById("checkout-view");
   const sv = document.getElementById("success-view");
   if (cv) cv.style.display = "none";
   if (sv) sv.style.display = "block";
+
   const codeEl = document.getElementById("ticket-code");
   if (codeEl) codeEl.textContent = code;
+
   const metaEl = document.getElementById("ticket-meta");
   if (metaEl) metaEl.textContent =
     type.toUpperCase() + " | " + cfg.eventName + " | " +
     cfg.location + " | Entry " + cfg.entryTime;
+
+  // Generate QR code for this ticket
+  const qrContainer = document.getElementById("ticket-qr");
+  if (qrContainer) {
+    qrContainer.innerHTML = "";
+    try {
+      new QRCode(qrContainer, {
+        text: code,
+        width: 180,
+        height: 180,
+        colorDark: "#1a1a1a",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.H
+      });
+    } catch (e) {
+      console.error("QR generation failed:", e);
+    }
+  }
 }
 
 function handleDownload() {
   if (!currentTicket) return;
   const t = currentTicket;
   const lines = [
-    "JAVIS EVENT TICKET", "==================",
-    "Code: " + t.code, "Name: " + t.name, "Phone: " + t.phone,
-    "Type: " + t.type.toUpperCase(), "Amount: " + t.amount + " UGX",
-    "Event: " + t.event, "Location: " + t.location, "Entry Time: " + t.entryTime,
-    "", "Do not share this code. One entry per code."
+    "JAVIS EVENT TICKET",
+    "==================",
+    "Code: " + t.code,
+    "Name: " + t.name,
+    "Phone: " + t.phone,
+    "Type: " + t.type.toUpperCase(),
+    "Amount: " + t.amount + " UGX",
+    "Event: " + t.event,
+    "Location: " + t.location,
+    "Entry Time: " + t.entryTime,
+    "",
+    "Do not share this code. One entry per code."
   ];
   const blob = new Blob([lines.join("\n")], { type: "text/plain" });
   const url = URL.createObjectURL(blob);
@@ -116,7 +149,7 @@ function handleDownload() {
   URL.revokeObjectURL(url);
 }
 
-// Wire up immediately — module scripts run after DOM is parsed
+// Wire up immediately - module scripts run after DOM is parsed
 const payBtn = document.getElementById("pay-now-btn");
 if (payBtn) payBtn.addEventListener("click", handlePay);
 else showErr("Pay button not found in HTML.");
