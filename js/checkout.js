@@ -13,13 +13,18 @@ let amount = 0;
 let currentTicket = null;
 
 function fmt(n) { return Number(n).toLocaleString("en-UG"); }
+function showErr(msg) {
+  const el = document.getElementById("checkout-error");
+  if (el) el.textContent = msg;
+}
 
 function updateInstruction() {
   if (!cfg) return;
   const m = document.getElementById("payment-method").value;
   const number = m === "mtn" ? cfg.mtnNumber : cfg.airtelNumber;
   const label = m === "mtn" ? "MTN Mobile Money" : "Airtel Money";
-  document.getElementById("payment-instruction").textContent =
+  const el = document.getElementById("payment-instruction");
+  if (el) el.textContent =
     "Send " + cfg.currency + " " + fmt(amount) + " to " + label +
     " number " + number + ". In this demo, no real money is charged.";
 }
@@ -32,52 +37,67 @@ async function loadConfig() {
       const data = snap.data();
       loaded = { ...DEFAULTS, ...data, prices: { ...DEFAULTS.prices, ...(data.prices || {}) } };
     }
-  } catch (e) { console.error("Could not load config:", e); }
+  } catch (e) {
+    console.error("loadConfig failed:", e);
+    showErr("Could not load event. " + (e.message || ""));
+  }
   cfg = loaded;
   amount = type === "vip" ? cfg.prices.vip : cfg.prices.ordinary;
 
-  document.getElementById("sum-event").textContent = cfg.eventName;
-  document.getElementById("sum-type").textContent = type === "vip" ? "VIP" : "Ordinary";
-  document.getElementById("sum-amount").textContent = cfg.currency + " " + fmt(amount);
+  const setText = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  setText("sum-event",  cfg.eventName);
+  setText("sum-type",   type === "vip" ? "VIP" : "Ordinary");
+  setText("sum-amount", cfg.currency + " " + fmt(amount));
   updateInstruction();
 }
 
-document.getElementById("payment-method").addEventListener("change", updateInstruction);
-
-window.processPayment = async function () {
+async function handlePay() {
+  const btn = document.getElementById("pay-now-btn");
   const name = document.getElementById("buyer-name").value.trim();
   const phone = document.getElementById("buyer-phone").value.trim();
   const method = document.getElementById("payment-method").value;
-  const err = document.getElementById("checkout-error");
-  err.textContent = "";
 
-  if (!cfg) { err.textContent = "Event not loaded. Refresh."; return; }
-  if (name.length < 3) { err.textContent = "Enter your full name."; return; }
-  if (!/^0[0-9]{9}$/.test(phone)) { err.textContent = "Phone must be 10 digits starting with 0."; return; }
+  showErr("");
+
+  if (!cfg)       { showErr("Event not loaded. Refresh the page."); return; }
+  if (name.length < 3) { showErr("Enter your full name."); return; }
+  if (!/^0[0-9]{9}$/.test(phone)) { showErr("Phone must be exactly 10 digits starting with 0."); return; }
+
+  if (btn) { btn.disabled = true; btn.textContent = "Generating code..."; }
 
   const code = generateTicketCode();
-  const ticket = {
+  currentTicket = {
     code, type, amount, name, phone, method,
-    event: cfg.eventName, location: cfg.location, entryTime: cfg.entryTime,
-    status: "valid", issuedAt: serverTimestamp()
+    event: cfg.eventName,
+    location: cfg.location,
+    entryTime: cfg.entryTime,
+    status: "valid"
   };
 
   try {
-    await addDoc(collection(db, "tickets"), ticket);
-    currentTicket = ticket;
-    document.getElementById("checkout-view").style.display = "none";
-    document.getElementById("success-view").style.display = "block";
-    document.getElementById("ticket-code").textContent = code;
-    document.getElementById("ticket-meta").textContent =
-      ticket.type.toUpperCase() + " | " + ticket.event + " | " +
-      ticket.location + " | Entry " + ticket.entryTime;
+    await addDoc(collection(db, "tickets"), {
+      ...currentTicket,
+      issuedAt: serverTimestamp()
+    });
   } catch (e) {
-    err.textContent = "Failed to save ticket: " + e.message;
-    console.error(e);
+    console.error("Save failed:", e);
+    showErr("Ticket saved locally, but Firestore save failed: " + e.message);
   }
-};
 
-window.downloadTicket = function () {
+  // Always show the code, even if Firestore save failed
+  const cv = document.getElementById("checkout-view");
+  const sv = document.getElementById("success-view");
+  if (cv) cv.style.display = "none";
+  if (sv) sv.style.display = "block";
+  const codeEl = document.getElementById("ticket-code");
+  if (codeEl) codeEl.textContent = code;
+  const metaEl = document.getElementById("ticket-meta");
+  if (metaEl) metaEl.textContent =
+    type.toUpperCase() + " | " + cfg.eventName + " | " +
+    cfg.location + " | Entry " + cfg.entryTime;
+}
+
+function handleDownload() {
   if (!currentTicket) return;
   const t = currentTicket;
   const lines = [
@@ -94,6 +114,17 @@ window.downloadTicket = function () {
   a.download = "javis-ticket-" + t.code + ".txt";
   a.click();
   URL.revokeObjectURL(url);
-};
+}
+
+// Wire up immediately — module scripts run after DOM is parsed
+const payBtn = document.getElementById("pay-now-btn");
+if (payBtn) payBtn.addEventListener("click", handlePay);
+else showErr("Pay button not found in HTML.");
+
+const dlBtn = document.getElementById("download-btn");
+if (dlBtn) dlBtn.addEventListener("click", handleDownload);
+
+const methodSel = document.getElementById("payment-method");
+if (methodSel) methodSel.addEventListener("change", updateInstruction);
 
 loadConfig();
