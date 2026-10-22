@@ -6,15 +6,7 @@ import { generateTicketCode } from "./codegen.js";
 import { DEFAULTS } from "./config.js";
 
 const params = new URLSearchParams(window.location.search);
-const orgId = params.get("org");
 const type = params.get("type") === "vip" ? "vip" : "ordinary";
-
-if (!orgId) {
-  document.getElementById("checkout-view").innerHTML =
-    "<div class='card'><h2>Invalid link</h2>" +
-    "<p>This checkout link is missing an organiser reference.</p>" +
-    "<a class='btn' href='index.html'>Back to Home</a></div>";
-}
 
 let cfg = null;
 let amount = 0;
@@ -33,10 +25,9 @@ function updateInstruction() {
 }
 
 async function loadConfig() {
-  if (!orgId) return;
   let loaded = DEFAULTS;
   try {
-    const snap = await getDoc(doc(db, "orgs", orgId, "config", "main"));
+    const snap = await getDoc(doc(db, "settings", "event"));
     if (snap.exists()) {
       const data = snap.data();
       loaded = { ...DEFAULTS, ...data, prices: { ...DEFAULTS.prices, ...(data.prices || {}) } };
@@ -72,7 +63,7 @@ window.processPayment = async function () {
   };
 
   try {
-    await addDoc(collection(db, "orgs", orgId, "tickets"), ticket);
+    await addDoc(collection(db, "tickets"), ticket);
     currentTicket = ticket;
     document.getElementById("checkout-view").style.display = "none";
     document.getElementById("success-view").style.display = "block";
