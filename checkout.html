@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Javis - Checkout</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header>
+  <h1>JAVIS</h1>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="privacy.html">Privacy &amp; Terms</a>
+  </nav>
+</header>
+
+<main>
+
+  <div id="checkout-view">
+    <div class="card">
+      <h2>Ticket Summary</h2>
+      <p><strong>Event:</strong> <span id="sum-event">-</span></p>
+      <p><strong>Ticket Type:</strong> <span id="sum-type">-</span></p>
+      <p><strong>Amount:</strong> <span id="sum-amount">-</span></p>
+    </div>
+
+    <div class="card">
+      <h2>Your Details</h2>
+      <label for="buyer-name">Full Name</label>
+      <input id="buyer-name" type="text" placeholder="e.g. John Okello">
+
+      <label for="buyer-phone">Phone Number (MTN or Airtel)</label>
+      <input id="buyer-phone" type="tel" placeholder="e.g. 0770123456">
+
+      <label for="payment-method">Payment Method</label>
+      <select id="payment-method">
+        <option value="mtn">MTN Mobile Money</option>
+        <option value="airtel">Airtel Money</option>
+      </select>
+
+      <p class="muted" id="payment-instruction"></p>
+
+      <p id="checkout-error" class="error"></p>
+
+      <button onclick="processPayment()">Pay Now</button>
+    </div>
+  </div>
+
+  <div id="success-view" style="display:none;">
+    <div class="card success">
+      <h2>Payment Confirmed</h2>
+      <p>Your ticket has been generated. Keep the code below safe. Present it at the entrance.</p>
+
+      <div class="code-display" id="ticket-code">-</div>
+
+      <p class="muted" id="ticket-meta"></p>
+
+      <button onclick="downloadTicket()">Download Ticket (TXT)</button>
+      <a class="btn secondary" href="index.html">Back to Home</a>
+    </div>
+  </div>
+
+</main>
+
+<footer>Javis Ticketing Demo</footer>
+
+<script src="js/config.js"></script>
+<script src="js/codegen.js"></script>
+<script src="js/checkout.js"></script>
+</body>
+</html>
